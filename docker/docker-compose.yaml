@@ -393,6 +393,7 @@ x-shared-env: &shared-api-worker-env
 services:
   # API service
   api:
+    container_name: dify-api
     image: langgenius/dify-api:0.15.3
     restart: always
     environment:
@@ -416,6 +417,7 @@ services:
   # worker service
   # The Celery worker for processing the queue.
   worker:
+    container_name: dify-worker
     image: langgenius/dify-api:0.15.3
     restart: always
     environment:
@@ -438,6 +440,7 @@ services:
 
   # Frontend web application.
   web:
+    container_name: dify-web
     image: langgenius/dify-web:0.15.3
     restart: always
     environment:
@@ -452,6 +455,7 @@ services:
 
   # The postgres database.
   db:
+    container_name: dify-db
     image: postgres:15-alpine
     restart: always
     environment:
@@ -475,6 +479,7 @@ services:
 
   # The redis cache.
   redis:
+    container_name: dify-redis
     image: redis:6-alpine
     restart: always
     environment:
@@ -489,6 +494,7 @@ services:
 
   # The DifySandbox
   sandbox:
+    container_name: dify-sandbox
     image: langgenius/dify-sandbox:0.2.10
     restart: always
     environment:
@@ -513,6 +519,7 @@ services:
   # for more information, please refer to
   # https://docs.dify.ai/learn-more/faq/install-faq#id-18.-why-is-ssrf_proxy-needed
   ssrf_proxy:
+    container_name: dify-ssrf-proxy
     image: ubuntu/squid:latest
     restart: always
     volumes:
@@ -553,6 +560,7 @@ services:
   # The nginx reverse proxy.
   # used for reverse proxying the API service and Web service.
   nginx:
+    container_name: dify-nginx
     image: nginx:latest
     restart: always
     volumes:
@@ -561,8 +569,8 @@ services:
       - ./nginx/https.conf.template:/etc/nginx/https.conf.template
       - ./nginx/conf.d:/etc/nginx/conf.d
       - ./nginx/docker-entrypoint.sh:/docker-entrypoint-mount.sh
-      - ./nginx/ssl:/etc/ssl # cert dir (legacy)
-      - ./volumes/certbot/conf/live:/etc/letsencrypt/live # cert dir (with certbot container)
+      - ./nginx/ssl:/etc/ssl
+      - ./volumes/certbot/conf/live:/etc/letsencrypt/live
       - ./volumes/certbot/conf:/etc/letsencrypt
       - ./volumes/certbot/www:/var/www/html
     entrypoint: [ 'sh', '-c', "cp /docker-entrypoint-mount.sh /docker-entrypoint.sh && sed -i 's/\r$$//' /docker-entrypoint.sh && chmod +x /docker-entrypoint.sh && /docker-entrypoint.sh" ]
@@ -571,8 +579,6 @@ services:
       NGINX_HTTPS_ENABLED: ${NGINX_HTTPS_ENABLED:-false}
       NGINX_SSL_PORT: ${NGINX_SSL_PORT:-443}
       NGINX_PORT: ${NGINX_PORT:-80}
-      # You're required to add your own SSL certificates/keys to the `./nginx/ssl` directory
-      # and modify the env vars below in .env if HTTPS_ENABLED is true.
       NGINX_SSL_CERT_FILENAME: ${NGINX_SSL_CERT_FILENAME:-dify.crt}
       NGINX_SSL_CERT_KEY_FILENAME: ${NGINX_SSL_CERT_KEY_FILENAME:-dify.key}
       NGINX_SSL_PROTOCOLS: ${NGINX_SSL_PROTOCOLS:-TLSv1.1 TLSv1.2 TLSv1.3}
@@ -586,9 +592,6 @@ services:
     depends_on:
       - api
       - web
-    ports:
-      - '${EXPOSE_NGINX_PORT:-80}:${NGINX_PORT:-80}'
-      - '${EXPOSE_NGINX_SSL_PORT:-443}:${NGINX_SSL_PORT:-443}'
 
   # The TiDB vector store.
   # For production use, please refer to https://github.com/pingcap/tidb-docker-compose
@@ -602,6 +605,7 @@ services:
 
   # The Weaviate vector store.
   weaviate:
+    container_name: dify-weaviate
     image: semitechnologies/weaviate:1.19.0
     profiles:
       - ''
@@ -627,6 +631,7 @@ services:
   # Qdrant vector store.
   # (if used, you need to set VECTOR_STORE to qdrant in the api & worker service.)
   qdrant:
+    container_name: dify-qdrant
     image: langgenius/qdrant:v1.7.3
     profiles:
       - qdrant
@@ -638,6 +643,7 @@ services:
 
   # The Couchbase vector store.
   couchbase-server:
+    container_name: dify-couchbase
     build: ./couchbase-server
     profiles:
       - couchbase
@@ -671,6 +677,7 @@ services:
 
   # The pgvector vector database.
   pgvector:
+    container_name: dify-pgvector
     image: pgvector/pgvector:pg16
     profiles:
       - pgvector
@@ -693,6 +700,7 @@ services:
 
   # pgvecto-rs vector store
   pgvecto-rs:
+    container_name: dify-pgvecto-rs
     image: tensorchord/pgvecto-rs:pg16-v0.3.0
     profiles:
       - pgvecto-rs
@@ -715,6 +723,7 @@ services:
 
   # Chroma vector database
   chroma:
+    container_name: dify-chroma
     image: ghcr.io/chroma-core/chroma:0.5.20
     profiles:
       - chroma
@@ -728,6 +737,7 @@ services:
 
   # OceanBase vector database
   oceanbase:
+    container_name: dify-oceanbase
     image: quay.io/oceanbase/oceanbase-ce:4.3.3.0-100000142024101215
     profiles:
       - oceanbase
@@ -745,6 +755,7 @@ services:
 
   # Oracle vector database
   oracle:
+    container_name: dify-oracle
     image: container-registry.oracle.com/database/free:latest
     profiles:
       - oracle
@@ -760,7 +771,7 @@ services:
 
   # Milvus vector database services
   etcd:
-    container_name: milvus-etcd
+    container_name: dify-milvus-etcd
     image: quay.io/coreos/etcd:v3.5.5
     profiles:
       - milvus
@@ -781,7 +792,7 @@ services:
       - milvus
 
   minio:
-    container_name: milvus-minio
+    container_name: dify-milvus-minio
     image: minio/minio:RELEASE.2023-03-20T20-16-18Z
     profiles:
       - milvus
@@ -800,7 +811,7 @@ services:
       - milvus
 
   milvus-standalone:
-    container_name: milvus-standalone
+    container_name: dify-milvus-standalone
     image: milvusdb/milvus:v2.5.0-beta
     profiles:
       - milvus
@@ -820,15 +831,12 @@ services:
     depends_on:
       - etcd
       - minio
-    ports:
-      - 19530:19530
-      - 9091:9091
     networks:
       - milvus
 
   # Opensearch vector database
   opensearch:
-    container_name: opensearch
+    container_name: dify-opensearch
     image: opensearchproject/opensearch:latest
     profiles:
       - opensearch
@@ -850,7 +858,7 @@ services:
       - opensearch-net
 
   opensearch-dashboards:
-    container_name: opensearch-dashboards
+    container_name: dify-opensearch-dashboards
     image: opensearchproject/opensearch-dashboards:latest
     profiles:
       - opensearch
@@ -865,7 +873,7 @@ services:
 
   # MyScale vector database
   myscale:
-    container_name: myscale
+    container_name: dify-myscale
     image: myscale/myscaledb:1.6.4
     profiles:
       - myscale
@@ -875,14 +883,12 @@ services:
       - ./volumes/myscale/data:/var/lib/clickhouse
       - ./volumes/myscale/log:/var/log/clickhouse-server
       - ./volumes/myscale/config/users.d/custom_users_config.xml:/etc/clickhouse-server/users.d/custom_users_config.xml
-    ports:
-      - ${MYSCALE_PORT:-8123}:${MYSCALE_PORT:-8123}
 
   # https://www.elastic.co/guide/en/elasticsearch/reference/current/settings.html
   # https://www.elastic.co/guide/en/elasticsearch/reference/current/docker.html#docker-prod-prerequisites
   elasticsearch:
+    container_name: dify-elasticsearch
     image: docker.elastic.co/elasticsearch/elasticsearch:8.14.3
-    container_name: elasticsearch
     profiles:
       - elasticsearch
       - elasticsearch-ja
@@ -900,8 +906,6 @@ services:
       xpack.security.enabled: 'true'
       xpack.security.enrollment.enabled: 'false'
       xpack.security.http.ssl.enabled: 'false'
-    ports:
-      - ${ELASTICSEARCH_PORT:-9200}:9200
     deploy:
       resources:
         limits:
@@ -916,8 +920,8 @@ services:
   # https://www.elastic.co/guide/en/kibana/current/docker.html
   # https://www.elastic.co/guide/en/kibana/current/settings.html
   kibana:
+    container_name: dify-kibana
     image: docker.elastic.co/kibana/kibana:8.14.3
-    container_name: kibana
     profiles:
       - elasticsearch
     depends_on:
@@ -933,8 +937,6 @@ services:
       I18N_LOCALE: zh-CN
       SERVER_PORT: '5601'
       ELASTICSEARCH_HOSTS: http://elasticsearch:9200
-    ports:
-      - ${KIBANA_PORT:-5601}:5601
     healthcheck:
       test: [ 'CMD-SHELL', 'curl -s http://localhost:5601 >/dev/null || exit 1' ]
       interval: 30s
@@ -944,6 +946,7 @@ services:
   # unstructured .
   # (if used, you need to set ETL_TYPE to Unstructured in the api & worker service.)
   unstructured:
+    container_name: dify-unstructured
     image: downloads.unstructured.io/unstructured-io/unstructured-api:latest
     profiles:
       - unstructured
