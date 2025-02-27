@@ -658,8 +658,6 @@ services:
       - COUCHBASE_EVENTING_RAM_SIZE=512
       - COUCHBASE_INDEX_RAM_SIZE=512
       - COUCHBASE_FTS_RAM_SIZE=1024
-    hostname: couchbase-server
-    container_name: couchbase-server
     working_dir: /opt/couchbase
     stdin_open: true
     tty: true
